@@ -1,15 +1,16 @@
 import discord
 import os
 from dotenv import load_dotenv
+from typing import Self
 
 # .env 파일 로드
 load_dotenv()
 
 class Client(discord.Client):
-  async def on_ready(self: 'Client') -> None:
+  async def on_ready(self: Self) -> None:
     print(f'Logged in as {self.user} (ID: {self.user.id})')
 
-  async def on_message(self: 'Client', message: discord.Message) -> None:
+  async def on_message(self: Self, message: discord.Message) -> None:
     # 봇이 자신의 메시지에 반응하지 않도록 설정
     if message.author.id == self.user.id:
       return
@@ -17,7 +18,7 @@ class Client(discord.Client):
     if message.content.startswith('hello'):
       await message.channel.send(f'Hello! {message.author}')
 
-  async def on_reaction_add(self: 'Client', reaction: discord.Reaction, user: discord.User) -> None:
+  async def on_reaction_add(self: Self, reaction: discord.Reaction, user: discord.User) -> None:
     if user.id == self.user.id:
       return
 
