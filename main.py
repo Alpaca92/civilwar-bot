@@ -14,9 +14,15 @@ class Client(discord.Client):
     if message.author.id == self.user.id:
       return
 
-    # 메시지 내용이 "ping"인 경우 "pong"으로 응답
-    if message.content == 'ping':
-      await message.channel.send('pong')
+    if message.content.startswith('hello'):
+      await message.channel.send(f'Hello! {message.author}')
+
+  async def on_reaction_add(self: 'Client', reaction: discord.Reaction, user: discord.User) -> None:
+    if user.id == self.user.id:
+      return
+
+    if str(reaction.emoji) == '👍':
+      await reaction.message.channel.send(f'Thanks for the thumbs up, {user.name}!')
 
 # Intents는 Discord 봇이 어떤 이벤트를 받을 것인지 지정하는 설정
 intents: discord.Intents = discord.Intents.default()
