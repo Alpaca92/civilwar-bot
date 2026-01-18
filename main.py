@@ -31,4 +31,4 @@ intents.message_content = True
 
 # Client 인스턴스를 생성할 때 Intents를 전달
 client: Client = Client(intents=intents)
-client.run(os.getenv('DISCORD_TOKEN'))
+client.run(os.getenv('DISCORD_TOKEN')) 
