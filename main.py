@@ -7,11 +7,18 @@ from typing import Self
 load_dotenv()
 
 # test server id
-GUIDE_ID = discord.Object(id=1461751770366869574)
 
 class Client(discord.Client):
   async def on_ready(self: Self) -> None:
     print(f'Logged in as {self.user} (ID: {self.user.id})')
+
+    try:
+      guild = discord.Object(id=1461751770366869574)
+      synced = await self.tree.sync(guild=guild)
+
+      print(f'Synced {len(sycned) commands to guild {guild.id}}')
+    except Exception as error:
+      print(f'Error syncing commands: {error}')
 
   async def on_message(self: Self, message: discord.Message) -> None:
     # 봇이 자신의 메시지에 반응하지 않도록 설정
@@ -36,7 +43,7 @@ intents.message_content = True
 client: Client = Client(intents=intents)
 
 # command 추가
-@client.tree.command(name="hello", descriptio="say Hello !" guild=GUIDE_ID)
+@client.tree.command(name="hello", descriptio="say Hello !" guild=1461751770366869574)
 async def sayHello(interaction: discord.INteraction):
   await interaction.response.send_message("Hi there !")
 
