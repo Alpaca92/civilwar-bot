@@ -6,6 +6,9 @@ from typing import Self
 # .env 파일 로드
 load_dotenv()
 
+# test server id
+GUIDE_ID = discord.Object(id=1461751770366869574)
+
 class Client(discord.Client):
   async def on_ready(self: Self) -> None:
     print(f'Logged in as {self.user} (ID: {self.user.id})')
@@ -31,4 +34,11 @@ intents.message_content = True
 
 # Client 인스턴스를 생성할 때 Intents를 전달
 client: Client = Client(intents=intents)
+
+# command 추가
+@client.tree.command(name="hello", descriptio="say Hello !" guild=GUIDE_ID)
+async def sayHello(interaction: discord.INteraction):
+  await interaction.response.send_message("Hi there !")
+
+# 클라이언트 실행
 client.run(os.getenv('DISCORD_TOKEN')) 
