@@ -16,7 +16,7 @@ class Client(discord.Client):
       guild = discord.Object(id=1461751770366869574)
       synced = await self.tree.sync(guild=guild)
 
-      print(f'Synced {len(sycned) commands to guild {guild.id}}')
+      print(f'Synced {len(synced)} commands to guild {guild.id}')
     except Exception as error:
       print(f'Error syncing commands: {error}')
 
@@ -43,8 +43,8 @@ intents.message_content = True
 client: Client = Client(intents=intents)
 
 # command 추가
-@client.tree.command(name="hello", descriptio="say Hello !" guild=1461751770366869574)
-async def sayHello(interaction: discord.INteraction):
+@client.tree.command(name="hello", description="say Hello !", guild=1461751770366869574)
+async def sayHello(interaction: discord.Interaction):
   await interaction.response.send_message("Hi there !")
 
 # 클라이언트 실행
