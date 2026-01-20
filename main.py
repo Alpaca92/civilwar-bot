@@ -47,5 +47,14 @@ client: Client = Client(intents=intents, command_prefix='!')
 async def sayHello(interaction: discord.Interaction):
   await interaction.response.send_message("Hi there !")
 
+@client.tree.command(name="embed", description="send embed message", guild=discord.Object(id=1461751770366869574))
+async def sendEmbed(interaction: discord.Interaction):
+  embed = discord.Embed(title="Sample Embed", description="This is an example of an embedded message.", color=0x00ff00)
+  embed.add_field(name="Field 1", value="This is the value for field 1", inline=False)
+  embed.add_field(name="Field 2", value="This is the value for field 2", inline=False)
+  embed.add_field(name="Field 3", value="This is the value for field 3", inline=False)
+  
+  await interaction.response.send_message(embed=embed)
+
 # 클라이언트 실행
 client.run(os.getenv('DISCORD_TOKEN')) 
