@@ -2,13 +2,13 @@ import discord
 import os
 from dotenv import load_dotenv
 from typing import Self
+from discord.ext import commands
+from discord import app_commands
 
 # .env 파일 로드
 load_dotenv()
 
-# test server id
-
-class Client(discord.Client):
+class Client(commands.Bot):
   async def on_ready(self: Self) -> None:
     print(f'Logged in as {self.user} (ID: {self.user.id})')
 
@@ -40,10 +40,10 @@ intents: discord.Intents = discord.Intents.default()
 intents.message_content = True
 
 # Client 인스턴스를 생성할 때 Intents를 전달
-client: Client = Client(intents=intents)
+client: Client = Client(intents=intents, command_prefix='!')
 
 # command 추가
-@client.tree.command(name="hello", description="say Hello !", guild=1461751770366869574)
+@client.tree.command(name="hello", description="say Hello !", guild=discord.Object(id=1461751770366869574))
 async def sayHello(interaction: discord.Interaction):
   await interaction.response.send_message("Hi there !")
 
