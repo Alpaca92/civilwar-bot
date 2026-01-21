@@ -35,11 +35,6 @@ class Client(commands.Bot):
     if str(reaction.emoji) == '👍':
       await reaction.message.channel.send(f'Thanks for the thumbs up, {user.name}!')
 
-class View(discord.ui.View):
-  @discord.ui.button(label="Click me!", style=discord.ButtonStyle.red, emoji="👍")
-  async def button_callback(self: Self, button, interaction: discord.Interaction):
-    await button.response.send_message("you have clicked the button !")
-
 # Intents는 Discord 봇이 어떤 이벤트를 받을 것인지 지정하는 설정
 intents: discord.Intents = discord.Intents.default()
 intents.message_content = True
@@ -61,10 +56,31 @@ async def sendEmbed(interaction: discord.Interaction):
   
   await interaction.response.send_message(embed=embed)
 
+class View(discord.ui.View):
+  @discord.ui.button(label="Click me!", style=discord.ButtonStyle.red, emoji="👍")
+  async def button_callback(self: Self, button, interaction: discord.Interaction):
+    await button.response.send_message("you have clicked the button !")
+
 @client.tree.command(name="button", description="displaying a button", guild=discord.Object(id=1461751770366869574))
 async def on_button_click(interaction: discord.Interaction):
   await interaction.response.send_message(view=View())
 
+class Menu(discord.ui.Select):
+  def __init__(self: Self):
+    options = [
+      discord.SelectOption(label="Red", description="Choose Red color", emoji="🟥"),
+      discord.SelectOption(label="Green", description="Choose Green color", emoji="🟩"),
+      discord.SelectOption(label="Blue", description="Choose Blue color", emoji="🟦"),
+    ]
+    super().__init__(placeholder="Choose a color...", min_values=1, max_values=3, options=options)
+
+class MenuView(discord.ui.View):
+  def __init__(self: Self, *args):
+    self.add_item(Menu())
+
+@client.tree.command(name="menu", description="displaying a menu", guild=discord.Object(id=1461751770366869574))
+async def on_menu(interaction: discord.Interaction):
+  await interaction.response.send_message(view=View())
 
 # 클라이언트 실행
-client.run(os.getenv('DISCORD_TOKEN')) 
+client.run(os.getenv('DISCORD_TOKEN'))
