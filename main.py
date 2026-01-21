@@ -35,6 +35,11 @@ class Client(commands.Bot):
     if str(reaction.emoji) == '👍':
       await reaction.message.channel.send(f'Thanks for the thumbs up, {user.name}!')
 
+class View(discord.ui.View):
+  @discord.ui.button(label="Click me!", style=discord.ButtonStyle.red, emoji="👍")
+  async def button_callback(self: Self, button, interaction: discord.Interaction):
+    await button.response.send_message("you have clicked the button !")
+
 # Intents는 Discord 봇이 어떤 이벤트를 받을 것인지 지정하는 설정
 intents: discord.Intents = discord.Intents.default()
 intents.message_content = True
@@ -55,6 +60,11 @@ async def sendEmbed(interaction: discord.Interaction):
   embed.add_field(name="Field 3", value="This is the value for field 3", inline=False)
   
   await interaction.response.send_message(embed=embed)
+
+@client.tree.command(name="button", description="displaying a button", guild=discord.Object(id=1461751770366869574))
+async def on_button_click(interaction: discord.Interaction):
+  await interaction.response.send_message(view=View())
+
 
 # 클라이언트 실행
 client.run(os.getenv('DISCORD_TOKEN')) 
