@@ -72,15 +72,19 @@ class Menu(discord.ui.Select):
       discord.SelectOption(label="Green", description="Choose Green color", emoji="🟩"),
       discord.SelectOption(label="Blue", description="Choose Blue color", emoji="🟦"),
     ]
-    super().__init__(placeholder="Choose a color...", min_values=1, max_values=3, options=options)
+    super().__init__(placeholder="Choose a color...", min_values=1, max_values=2, options=options)
+
+  async def callback(self: Self, interaction: discord.Interaction):
+    await interaction.response.send_message(f'You selected: {", ".join(self.values)}')
 
 class MenuView(discord.ui.View):
   def __init__(self: Self, *args):
+    super().__init__(*args)
     self.add_item(Menu())
 
 @client.tree.command(name="menu", description="displaying a menu", guild=discord.Object(id=1461751770366869574))
 async def on_menu(interaction: discord.Interaction):
-  await interaction.response.send_message(view=View())
+  await interaction.response.send_message(view=MenuView())
 
 # 클라이언트 실행
 client.run(os.getenv('DISCORD_TOKEN'))
