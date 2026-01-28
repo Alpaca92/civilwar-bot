@@ -75,7 +75,8 @@ class Menu(discord.ui.Select):
     super().__init__(placeholder="Choose a color...", min_values=1, max_values=2, options=options)
 
   async def callback(self: Self, interaction: discord.Interaction):
-    await interaction.response.send_message(f'You selected: {", ".join(self.values)}')
+    if self.values[0] == "Red":
+      await interaction.response.send_message('You selected: Red')
 
 class MenuView(discord.ui.View):
   def __init__(self: Self, *args):
