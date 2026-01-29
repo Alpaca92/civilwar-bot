@@ -29,18 +29,48 @@ class Client(commands.Bot):
       await message.channel.send(f'Hello! {message.author}')
 
   async def on_reaction_add(self: Self, reaction: discord.Reaction, user: discord.User) -> None:
-    if user.id == self.user.id:
+    if user.bot:
       return
 
-    if str(reaction.emoji) == '👍':
-      await reaction.message.channel.send(f'Thanks for the thumbs up, {user.name}!')
+    guild = reaction.message.guild
+
+    if not guild:
+      return
+    if hasattr(self, "colour_role_message_id") and reaction.message.id != self.colour_role_message_id:
+      return
+    
+    emoji = str(reaction.emoji)
 
 # Intents는 Discord 봇이 어떤 이벤트를 받을 것인지 지정하는 설정
 intents: discord.Intents = discord.Intents.default()
 intents.message_content = True
+intents.reactions = True
+intents.guilds = True
+intents.members = True
 
 # Client 인스턴스를 생성할 때 Intents를 전달
 client: Client = Client(intents=intents, command_prefix='!')
+
+@client.tree.command(name="colourroles", description="Assign yourself a colour role!", guild=discord.Object(id=1461751770366869574))
+async def colour_roles(interaction: discord.Interaction):
+  # check admin
+  if not interaction.user.guild_permissions.administrator:
+    await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+    return
+
+  await interaction.response.defer(ephemeral=True)
+
+  embed = discord.Embed(title="Choose your colour roles!", description="Select the colours you want to assign to yourself from the dropdown menu below.", color=0x3498db)
+  message = await interaction.channel.send(embed=embed)
+
+  emojis = ['🔴', '🟢', '🔵', '🟡', '🟣', '🟠']
+
+  for emoji in emojis:
+    await message.add_reaction(emoji)
+
+  client.colour_role_message_id = message.id
+
+  await interaction.followup.send("Colour role message created!", ephemeral=True)
 
 # command 추가
 @client.tree.command(name="hello", description="say Hello !", guild=discord.Object(id=1461751770366869574))
