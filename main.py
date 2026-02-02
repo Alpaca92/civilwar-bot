@@ -40,6 +40,43 @@ class Client(commands.Bot):
       return
     
     emoji = str(reaction.emoji)
+    reaction_role_map = {
+      '🔴': 'red',
+      '🔵': 'blue',
+    }
+    
+    if emoji in reaction_role_map:
+      role_name = reaction_role_map[emoji]
+      role = discord.utils.get(guild.roles, name=role_name)
+
+      if role and user:
+        await user.add_roles(role)
+        print(f'Assigned role {role_name} to user {user.name}')
+
+  async def on_reaction_remove(self: Self, reaction: discord.Reaction, user: discord.User) -> None:
+    if user.bot:
+      return
+
+    guild = reaction.message.guild
+
+    if not guild:
+      return
+    if hasattr(self, "colour_role_message_id") and reaction.message.id != self.colour_role_message_id:
+      return
+    
+    emoji = str(reaction.emoji)
+    reaction_role_map = {
+      '🔴': 'red',
+      '🔵': 'blue',
+    }
+    
+    if emoji in reaction_role_map:
+      role_name = reaction_role_map[emoji]
+      role = discord.utils.get(guild.roles, name=role_name)
+
+      if role and user:
+        await user.remove_roles(role)
+        print(f'Removed role {role_name} from user {user.name}')
 
 # Intents는 Discord 봇이 어떤 이벤트를 받을 것인지 지정하는 설정
 intents: discord.Intents = discord.Intents.default()
@@ -63,7 +100,7 @@ async def colour_roles(interaction: discord.Interaction):
   embed = discord.Embed(title="Choose your colour roles!", description="Select the colours you want to assign to yourself from the dropdown menu below.", color=0x3498db)
   message = await interaction.channel.send(embed=embed)
 
-  emojis = ['🔴', '🟢', '🔵', '🟡', '🟣', '🟠']
+  emojis = ['🔴',  '🔵']
 
   for emoji in emojis:
     await message.add_reaction(emoji)
