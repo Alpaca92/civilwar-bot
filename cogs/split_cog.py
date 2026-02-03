@@ -51,7 +51,7 @@ class SplitCog(commands.Cog):
 
     embed = discord.Embed(
       title="🎮 팀 구성 설정",
-      description="0. 같은 음성 채널에 접속된 유저들만 팀 구성 대상이 됩니다.\n1. 레드팀/블루팀에 고정할 멤버를 각각 선택하세요.\n2. 아무도 선택하지 않으면 완전 랜덤으로 배정됩니다.",
+      description="1. 같은 음성 채널에 접속된 유저들만 팀 구성 대상이 됩니다.\n2. 레드팀/블루팀에 고정할 멤버를 각각 선택하세요.\n3. 아무도 선택하지 않으면 완전 랜덤으로 배정됩니다.",
       color=discord.Color.blue(),
     )
     await interaction.response.send_message(
@@ -64,14 +64,10 @@ class TeamMemberSelect(discord.ui.Select):
   def __init__(
     self,
     placeholder: str,
-    candidates: List[discord.Member],
+    options: List[discord.SelectOption],
     min_values: int = 0,
     max_values: int = 5,
   ) -> None:
-    options = [
-      discord.SelectOption(label=m.display_name, value=str(m.id))
-      for m in candidates[:25]
-    ]
     super().__init__(
       placeholder=placeholder,
       min_values=min_values,
@@ -86,34 +82,88 @@ class TeamSetupView(discord.ui.View):
     self.cog = cog
     self.fixed_red: List[discord.Member] = []
     self.fixed_blue: List[discord.Member] = []
+    self.max_team_size = 5
 
+    self.candidates = candidates
     self.candidates_map = {str(m.id): m for m in candidates}
 
     self.red_select = TeamMemberSelect(
       placeholder="🔴 레드팀 고정 멤버 (0~5명)",
-      candidates=candidates,
+      options=self._build_options(set(), set()),
       min_values=0,
-      max_values=5,
+      max_values=self.max_team_size,
     )
     self.red_select.callback = self.select_red
     self.add_item(self.red_select)
 
     self.blue_select = TeamMemberSelect(
       placeholder="🔵 블루팀 고정 멤버 (0~5명)",
-      candidates=candidates,
+      options=self._build_options(set(), set()),
       min_values=0,
-      max_values=5,
+      max_values=self.max_team_size,
     )
     self.blue_select.callback = self.select_blue
     self.add_item(self.blue_select)
 
+  def _build_options(
+    self, exclude_ids: set[str], selected_ids: set[str]
+  ) -> List[discord.SelectOption]:
+    options = []
+    for member in self.candidates:
+      member_id = str(member.id)
+      if member_id in exclude_ids:
+        continue
+      options.append(
+        discord.SelectOption(
+          label=member.display_name,
+          value=member_id,
+          default=member_id in selected_ids,
+        )
+      )
+
+    # Discord Select는 최대 25개까지만 표시 가능
+    return options[:25]
+
+  def _refresh_selects(self) -> None:
+    red_ids = {str(m.id) for m in self.fixed_red}
+    blue_ids = {str(m.id) for m in self.fixed_blue}
+    red_options = self._build_options(blue_ids, red_ids)
+    blue_options = self._build_options(red_ids, blue_ids)
+
+    print(f"Red fixed IDs: {red_ids}")
+    print(f"Blue fixed IDs: {blue_ids}")
+
+    if not red_options:
+      red_options = [
+        discord.SelectOption(label="선택 가능한 인원이 없습니다", value="none")
+      ]
+      self.red_select.disabled = True
+    else:
+      self.red_select.disabled = False
+
+    self.red_select.options = red_options
+    self.red_select.max_values = min(self.max_team_size, len(red_options))
+
+    if not blue_options:
+      blue_options = [
+        discord.SelectOption(label="선택 가능한 인원이 없습니다", value="none")
+      ]
+      self.blue_select.disabled = True
+    else:
+      self.blue_select.disabled = False
+
+    self.blue_select.options = blue_options
+    self.blue_select.max_values = min(self.max_team_size, len(blue_options))
+
   async def select_red(self, interaction: discord.Interaction) -> None:
     self.fixed_red = [self.candidates_map[v] for v in self.red_select.values]
-    await interaction.response.defer()
+    self._refresh_selects()
+    await interaction.response.edit_message(view=self)
 
   async def select_blue(self, interaction: discord.Interaction) -> None:
     self.fixed_blue = [self.candidates_map[v] for v in self.blue_select.values]
-    await interaction.response.defer()
+    self._refresh_selects()
+    await interaction.response.edit_message(view=self)
 
   @discord.ui.button(label="팀 나누기 확정", style=discord.ButtonStyle.success)
   async def confirm(
@@ -126,22 +176,7 @@ class TeamSetupView(discord.ui.View):
         "❌ 레드팀과 블루팀에 중복된 멤버가 있습니다.", ephemeral=True
       )
 
-    # 현재 보이스 채널에 있는 인원 중 10명 추출 (또는 전체 멤버 대상 로직)
-    # 여기서는 편의상 선택된 인원 + 나머지 랜덤 인원을 처리하는 로직으로 구성합니다.
-    # 실제 운영 시에는 '전체 참가자 10명'을 어떻게 정의할지 기준이 필요합니다. (예: 현재 채널 인원)
-
-    voice_state = interaction.user.voice
-    if not voice_state:
-      return await interaction.followup.send(
-        "❌ 음성 채널에 접속해 있어야 인원을 파악할 수 있습니다.", ephemeral=True
-      )
-
-    all_candidates = voice_state.channel.members
-    if len(all_candidates) < 10:
-      return await interaction.followup.send(
-        f"❌ 음성 채널에 인원이 부족합니다. (현재 {len(all_candidates)}명)",
-        ephemeral=True,
-      )
+    all_candidates = interaction.user.voice.channel.members
 
     # 랜덤 로직
     fixed_all = set(self.fixed_red + self.fixed_blue)
@@ -227,7 +262,7 @@ class GameOverView(discord.ui.View):
   @discord.ui.button(
     label="경기 종료 (복귀 및 역할 제거)", style=discord.ButtonStyle.danger, emoji="🏁"
   )
-  async def stop(
+  async def stop_game(
     self, interaction: discord.Interaction, button: discord.ui.Button
   ) -> None:
     await interaction.response.defer()
@@ -246,7 +281,7 @@ class GameOverView(discord.ui.View):
         await m.move_to(waiting_ch)
 
     await interaction.followup.send("✅ 모든 인원이 복귀하였고 역할이 제거되었습니다.")
-    self.stop()
+    super().stop()
 
 
 async def setup(bot: commands.Bot) -> None:
