@@ -1,47 +1,51 @@
-import discord
 import os
-from dotenv import load_dotenv
 from typing import Self
-from discord.ext import commands
-from discord import app_commands
 
-# .env 파일 로드
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
+
 load_dotenv()
 
-guild = discord.Object(id=1461751770366869574)
+# 특정 서버 ID 지정 (동기화 속도 향상)
+MY_GUILD = discord.Object(id=1461751770366869574)
+
 
 class Client(commands.Bot):
-  async def on_ready(self: Self) -> None:
-    print(f'Logged in as {self.user} (ID: {self.user.id})')
-
-    try:
-      synced = await self.tree.sync(guild=guild)
-      print(f'Synced {len(synced)} commands to guild {guild.id}')
-    except Exception as error:
-      print(f'Error syncing commands: {error}')
-  
+  # setup_hook: 봇이 시작될 때 가장 먼저 비동기로 실행됨
   async def setup_hook(self: Self) -> None:
-    # cogs 폴더의 모든 파일을 로드
-    for filename in os.listdir('./cogs'):
-      if filename.endswith('.py') and not filename.startswith('_'):
+    # Cogs 로드
+    for filename in os.listdir("./cogs"):
+      if filename.endswith(".py") and not filename.startswith("_"):
         try:
-          await self.load_extension(f'cogs.{filename[:-3]}')
-          print(f'✅ Loaded cog: {filename}')
+          await self.load_extension(f"cogs.{filename[:-3]}")
+          print(f"✅ Loaded cog: {filename}")
         except Exception as error:
-          print(f'❌ Failed to load {filename}: {error}')
+          print(f"❌ Failed to load {filename}: {error}")
 
-# Intents는 Discord 봇이 어떤 이벤트를 받을 것인지 지정하는 설정
-def get_intents():
-  intents: discord.Intents = discord.Intents.default()
+    # 특정 서버 전용 커맨드 동기화
+    # 팁: 개발 중에는 이 방식이 빠르고, 배포 때는 전역 동기화로 바꿉니다.
+    self.tree.copy_global_to(guild=MY_GUILD)
+    synced = await self.tree.sync(guild=MY_GUILD)
+    print(f"Synced {len(synced)} commands to guild {MY_GUILD.id}")
+
+  async def on_ready(self: Self) -> None:
+    print(f"🚀 Logged in as {self.user} (ID: {self.user.id})")
+
+
+# Intents 설정 함수
+def get_intents() -> discord.Intents:
+  intents = discord.Intents.default()
   intents.message_content = True
-  intents.reactions = True
-  intents.guilds = True
-  intents.members = True
-  
+  intents.members = True  # 팀 나누기 봇에는 필수!
   return intents
 
-# Client 인스턴스를 생성할 때 Intents를 전달
-client: Client = Client(intents=get_intents(), command_prefix='!')
 
-# 클라이언트 실행
-client.run(os.getenv('DISCORD_TOKEN'))
+# 실행부
+if __name__ == "__main__":
+  client = Client(
+    command_prefix="!",
+    intents=get_intents(),
+    help_command=None,  # 기본 도움말 커맨드 비활성화 (선택)
+  )
+  client.run(os.getenv("DISCORD_TOKEN"))
