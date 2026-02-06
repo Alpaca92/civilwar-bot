@@ -6,6 +6,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils.checks import is_in_voice
+
 RED_ROLE_NAME = "Red"
 BLUE_ROLE_NAME = "Blue"
 WAITING_VOICE_ID = int(os.getenv("WAITING_VOICE_ID"))
@@ -25,6 +27,7 @@ class SplitCog(commands.Cog):
       role = await guild.create_role(name=name, color=color)
     return role
 
+  @is_in_voice()
   @app_commands.command(
     name="split", description="팀 구성 (미선택 시 랜덤, 선택 시 고정)"
   )
