@@ -27,9 +27,7 @@ class SplitCog(commands.Cog):
     return role
 
   @check_user_count(2, ">=")  # fixme: 10명 이상으로 변경
-  @app_commands.command(
-    name="split", description="팀 구성 (미선택 시 랜덤, 선택 시 고정)"
-  )
+  @app_commands.command(name="split", description="랜덤 팀 짜기")
   async def split(self, interaction: discord.Interaction) -> None:
     embed = discord.Embed(
       title="🎮 팀 구성 대상 선택",
@@ -70,12 +68,44 @@ class TargetMemberSelect(discord.ui.Select):
     # 부모 View에 저장
     self.view.selected_members = selected_members
 
+    await interaction.response.defer()
+
+
+class ConfirmButton(discord.ui.Button):
+  def __init__(self) -> None:
+    super().__init__(label="확인", style=discord.ButtonStyle.primary)
+
+  async def callback(self, interaction: discord.Interaction) -> None:
+    view = self.view
+    if not isinstance(view, TargetMemberView):
+      return
+
+    if not view.selected_members:
+      await interaction.response.send_message(
+        ephemeral=True,
+        content="먼저 10명을 선택해 주세요.",
+      )
+      return
+
+    member_mentions = [member.mention for member in view.selected_members if member]
+    embed = discord.Embed(
+      title="✅ 팀 구성 대상 확정",
+      description="\n".join(member_mentions),
+      color=discord.Color.green(),
+    )
+
+    self.disabled = True
+    await interaction.response.send_message(embed=embed)
+
+    # 팀 나누기 및 역할 할당 로직 View 밖으로 분리 예정
+
 
 class TargetMemberView(discord.ui.View):
   def __init__(self, members: List[discord.Member]):
     super().__init__(timeout=300)
-    self.selected_members: list[discord.Member | None] = []
+    self.selected_members: list[discord.Member] = []
     self.add_item(TargetMemberSelect(members))
+    self.add_item(ConfirmButton())
 
 
 async def setup(bot: commands.Bot) -> None:
