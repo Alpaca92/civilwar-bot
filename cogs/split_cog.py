@@ -59,15 +59,19 @@ class TargetMemberSelect(discord.ui.Select):
       options=options[:25],  # Discord Select 최대 25개 제한
     )
 
-  # async def callback(self, interaction: discord.Interaction) -> None:
-  #   selected_member_ids = [int(value) for value in self.values]
-  #   selected_members = [
-  #     interaction.guild.get_member(member_id) for member_id in selected_member_ids
-  #   ]
+  async def callback(self, interaction: discord.Interaction) -> None:
+    selected_member_ids = [int(value) for value in self.values]
+    selected_members = [
+      interaction.guild.get_member(member_id) for member_id in selected_member_ids
+    ]
+
+    # 부모 View에 저장
+    self.view.selected_members = selected_members
 
 class TargetMemberView(discord.ui.View):
   def __init__(self, members: List[discord.Member]):
     super().__init__(timeout=300)
+    self.selected_members: list[discord.Member | None] = []
     self.add_item(TargetMemberSelect(members))
 
 async def setup(bot: commands.Bot) -> None:
