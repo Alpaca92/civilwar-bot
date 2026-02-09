@@ -20,7 +20,7 @@ def is_in_voice():
 CompareType = Literal[">", "<", ">=", "<=", "=="]
 
 
-# 음성 채널 접속 유저 인원 체크
+# 채널 유저 인원 체크
 def check_user_count(count: int, op: CompareType = ">="):
   # 문자열로 된 연산자를 실제 파이썬 비교 함수로 매핑
   ops = {
@@ -33,7 +33,16 @@ def check_user_count(count: int, op: CompareType = ">="):
   operation = ops.get(op)
 
   async def predicate(interaction: discord.Interaction) -> bool:
-    current_members = len(interaction.user.voice.channel.members)
+    channel = interaction.channel
+    members = None
+    if channel and hasattr(channel, "members"):
+      members = channel.members
+    elif interaction.user.voice and interaction.user.voice.channel:
+      members = interaction.user.voice.channel.members
+    else:
+      members = []
+
+    current_members = len(members)
 
     # 설정한 연산자에 따라 비교 실행 (예: current_members >= count)
     if not operation(current_members, count):
