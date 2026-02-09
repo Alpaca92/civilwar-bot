@@ -35,6 +35,7 @@ def check_user_count(count: int, op: CompareType = ">="):
   async def predicate(interaction: discord.Interaction) -> bool:
     channel = interaction.channel
     members = None
+    
     if channel and hasattr(channel, "members"):
       members = channel.members
     elif interaction.user.voice and interaction.user.voice.channel:
