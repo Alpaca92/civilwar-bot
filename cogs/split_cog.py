@@ -53,7 +53,7 @@ class TargetMemberSelect(discord.ui.Select):
     ]
 
     super().__init__(
-      placeholder="10명을 선택하세요.",
+      placeholder=f"{min(10, len(options))}명을 선택하세요.",
       min_values=min(10, len(options)),
       max_values=min(10, len(options)),
       options=options[:25],  # Discord Select 최대 25개 제한
@@ -77,6 +77,7 @@ class ConfirmButton(discord.ui.Button):
 
   async def callback(self, interaction: discord.Interaction) -> None:
     view = self.view
+
     if not isinstance(view, TargetMemberView):
       return
 
@@ -87,17 +88,7 @@ class ConfirmButton(discord.ui.Button):
       )
       return
 
-    member_mentions = [member.mention for member in view.selected_members if member]
-    embed = discord.Embed(
-      title="✅ 팀 구성 대상 확정",
-      description="\n".join(member_mentions),
-      color=discord.Color.green(),
-    )
-
-    self.disabled = True
-    await interaction.response.send_message(embed=embed)
-
-    # 팀 나누기 및 역할 할당 로직 View 밖으로 분리 예정
+    await interaction.response.send_message(view=ResultView(view.selected_members))
 
 
 class TargetMemberView(discord.ui.View):
@@ -106,6 +97,40 @@ class TargetMemberView(discord.ui.View):
     self.selected_members: list[discord.Member] = []
     self.add_item(TargetMemberSelect(members))
     self.add_item(ConfirmButton())
+
+
+# [Step 2] 팀원 결과 및 Role 부여
+class ResultEmbed(discord.Embed):
+  def __init__(self, members: List[discord.Member]) -> None:
+    super().__init__(
+      title="⚔️ 팀 구성 완료",
+      color=discord.Color.green(),
+    )
+
+    # 팀 나누기
+    random_members = members.copy()
+    discord.utils.shuffle(random_members)
+    mid_index = len(random_members) // 2
+    red_team = random_members[:mid_index]
+    blue_team = random_members[mid_index:]
+
+    # 필드 추가
+    self.add_field(
+      name="🔴 Red Team",
+      value="\n".join(member.display_name for member in red_team),
+      inline=False,
+    )
+    self.add_field(
+      name="🔵 Blue Team",
+      value="\n".join(member.display_name for member in blue_team),
+      inline=False,
+    )
+
+
+class ResultView(discord.ui.View):
+  def __init__(self, members: List[discord.Member]) -> None:
+    super().__init__(timeout=300)
+    self.add_item(ResultEmbed(members))
 
 
 async def setup(bot: commands.Bot) -> None:
