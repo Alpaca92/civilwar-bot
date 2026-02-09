@@ -1,5 +1,4 @@
 import os
-import random
 from typing import List
 
 import discord
@@ -27,22 +26,25 @@ class SplitCog(commands.Cog):
       role = await guild.create_role(name=name, color=color)
     return role
 
-  @check_user_count(2, ">=") # fixme: 10명 이상으로 변경
+  @check_user_count(2, ">=")  # fixme: 10명 이상으로 변경
   @app_commands.command(
     name="split", description="팀 구성 (미선택 시 랜덤, 선택 시 고정)"
   )
   async def split(self, interaction: discord.Interaction) -> None:
     embed = discord.Embed(
       title="🎮 팀 구성 대상 선택",
-      description="내전 대상 10명을 선택해 주세요.\n(취소하려면 ❌ 리액션)",
+      description="내전 대상 10명을 선택해 주세요.",
       color=discord.Color.blue(),
     )
+
+    members = [member for member in interaction.channel.members if not member.bot]
 
     await interaction.response.send_message(
       ephemeral=True,
       embed=embed,
-      view=TargetMemberView(interaction.channel.members),
+      view=TargetMemberView(members),
     )
+
 
 # [Step 1] 팀원 선택 및 확인 View
 class TargetMemberSelect(discord.ui.Select):
@@ -68,11 +70,13 @@ class TargetMemberSelect(discord.ui.Select):
     # 부모 View에 저장
     self.view.selected_members = selected_members
 
+
 class TargetMemberView(discord.ui.View):
   def __init__(self, members: List[discord.Member]):
     super().__init__(timeout=300)
     self.selected_members: list[discord.Member | None] = []
     self.add_item(TargetMemberSelect(members))
+
 
 async def setup(bot: commands.Bot) -> None:
   await bot.add_cog(SplitCog(bot))
