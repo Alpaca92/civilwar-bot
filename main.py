@@ -15,6 +15,8 @@ MY_GUILD = discord.Object(id=1461751770366869574)
 class Client(commands.Bot):
   # setup_hook: 봇이 시작될 때 가장 먼저 비동기로 실행됨
   async def setup_hook(self: Self) -> None:
+    self.tree.on_error = self.on_app_command_error
+
     # Cogs 로드
     for filename in os.listdir("./cogs"):
       if filename.endswith(".py") and not filename.startswith("_"):
@@ -39,9 +41,7 @@ class Client(commands.Bot):
     error: app_commands.AppCommandError,
   ) -> None:
     if isinstance(error, app_commands.CheckFailure):
-      message = (
-        str(error) or "❌ 음성 채널에 접속한 상태에서만 팀 구성을 할 수 있습니다."
-      )
+      message = str(error) or "❌ 이 명령어를 실행할 수 있는 권한이 없습니다."
 
       if interaction.response.is_done():
         await interaction.followup.send(message, ephemeral=True)

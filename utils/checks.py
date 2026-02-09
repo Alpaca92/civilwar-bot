@@ -11,7 +11,9 @@ def is_in_voice():
     if interaction.user.voice and interaction.user.voice.channel:
       return True
     # 음성 채널에 없으면 에러를 발생시키거나 False 반환
-    raise app_commands.CheckFailure("먼저 음성 채널에 접속해야 합니다!")
+    raise app_commands.CheckFailure(
+      "❌ 음성 채널에 접속한 상태에서만 팀 구성을 할 수 있습니다."
+    )
 
   return app_commands.check(predicate)
 
@@ -35,7 +37,7 @@ def check_user_count(count: int, op: CompareType = ">="):
   async def predicate(interaction: discord.Interaction) -> bool:
     channel = interaction.channel
     members = None
-    
+
     if channel and hasattr(channel, "members"):
       members = channel.members
     elif interaction.user.voice and interaction.user.voice.channel:
@@ -57,7 +59,7 @@ def check_user_count(count: int, op: CompareType = ">="):
       }
 
       raise app_commands.CheckFailure(
-        f"인원수 조건이 맞지 않습니다. (현재 {current_members}명, 조건: {msg_map.get(op)})"
+        f"❌ 인원수 조건이 맞지 않습니다. (현재 {current_members}명, 조건: {msg_map.get(op)})"
       )
 
     return True
