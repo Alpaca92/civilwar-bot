@@ -1,5 +1,4 @@
 import os
-from random import shuffle
 from typing import List
 
 import discord
@@ -7,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils.checks import check_user_count
+from utils.team_utils import split_teams
 
 RED_ROLE_NAME = "Red"
 BLUE_ROLE_NAME = "Blue"
@@ -96,8 +96,11 @@ class ConfirmButton(discord.ui.Button):
     # 원본 메시지 편집하여 비활성화된 View 반영
     await interaction.response.edit_message(view=view)
     
+    # 팀 나누기
+    red_team, blue_team = split_teams(view.selected_members)
+    
     # 결과 메시지 전송
-    await interaction.followup.send(embed=ResultEmbed(view.selected_members), view=ResultView(view.selected_members))
+    await interaction.followup.send(embed=ResultEmbed(red_team, blue_team), view=ResultView(red_team, blue_team))
 
 
 class TargetMemberView(discord.ui.View):
@@ -110,18 +113,11 @@ class TargetMemberView(discord.ui.View):
 
 # [Step 2] 팀원 결과 및 Role 부여
 class ResultEmbed(discord.Embed):
-  def __init__(self, members: List[discord.Member]) -> None:
+  def __init__(self, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
     super().__init__(
       title="⚔️ 팀 구성 완료",
       color=discord.Color.green(),
     )
-
-    # 팀 나누기
-    random_members = members.copy()
-    shuffle(random_members)
-    mid_index = len(random_members) // 2
-    red_team = random_members[:mid_index]
-    blue_team = random_members[mid_index:]
 
     # 필드 추가
     self.add_field(
@@ -137,8 +133,10 @@ class ResultEmbed(discord.Embed):
 
 
 class ResultView(discord.ui.View):
-  def __init__(self, members: List[discord.Member]) -> None:
+  def __init__(self, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
     super().__init__(timeout=300)
+    self.red_team = red_team
+    self.blue_team = blue_team
 
 
 async def setup(bot: commands.Bot) -> None:
