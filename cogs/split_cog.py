@@ -23,6 +23,7 @@ class SplitCog(commands.Cog):
     self, guild: discord.Guild, name: str, color: discord.Color
   ) -> discord.Role:
     role = discord.utils.get(guild.roles, name=name)
+
     if not role:
       role = await guild.create_role(name=name, color=color)
     return role
@@ -100,7 +101,7 @@ class ConfirmButton(discord.ui.Button):
     red_team, blue_team = split_teams(view.selected_members)
     
     # 결과 메시지 전송
-    await interaction.followup.send(embed=ResultEmbed(red_team, blue_team), view=ResultView(red_team, blue_team))
+    await interaction.followup.send(embed=ResultEmbed(red_team, blue_team), view=ResultView(interaction.client, red_team, blue_team))
 
 
 class TargetMemberView(discord.ui.View):
@@ -131,12 +132,47 @@ class ResultEmbed(discord.Embed):
       inline=True,
     )
 
+class SetRoleButton(discord.ui.Button):
+  def __init__(self) -> None:
+    super().__init__(label="각 팀 역할 부여", style=discord.ButtonStyle.secondary)
+
+  async def callback(self, interaction: discord.Interaction) -> None:
+    view = self.view
+
+    if not isinstance(view, ResultView):
+      return
+
+    guild = interaction.guild
+    if not guild:
+      await interaction.response.send_message(
+        ephemeral=True,
+        content="서버에서만 사용할 수 있는 명령어입니다.",
+      )
+      return
+
+    teams_data = [
+      (RED_ROLE_NAME, discord.Color.red(), view.red_team),
+      (BLUE_ROLE_NAME, discord.Color.blue(), view.blue_team),
+    ]
+    
+    for role_name, color, members in teams_data:
+      role = await view.bot.get_or_create_role(guild, role_name, color)
+      for member in members:
+        await member.add_roles(role)
+
+    await interaction.response.send_message(
+      ephemeral=True,
+      content="✅ 각 팀 역할이 부여되었습니다.",
+    )
+
 
 class ResultView(discord.ui.View):
-  def __init__(self, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
+  def __init__(self, bot: commands.Bot, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
     super().__init__(timeout=300)
+    self.bot = bot
     self.red_team = red_team
     self.blue_team = blue_team
+    self.add_item(SetRoleButton())
 
 
 async def setup(bot: commands.Bot) -> None:
