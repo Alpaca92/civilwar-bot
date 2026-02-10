@@ -1,4 +1,5 @@
 import os
+from random import shuffle
 from typing import List
 
 import discord
@@ -88,7 +89,15 @@ class ConfirmButton(discord.ui.Button):
       )
       return
 
-    await interaction.response.send_message(view=ResultView(view.selected_members))
+    # View의 모든 아이템 비활성화
+    for item in view.children:
+      item.disabled = True
+    
+    # 원본 메시지 편집하여 비활성화된 View 반영
+    await interaction.response.edit_message(view=view)
+    
+    # 결과 메시지 전송
+    await interaction.followup.send(embed=ResultEmbed(view.selected_members), view=ResultView(view.selected_members))
 
 
 class TargetMemberView(discord.ui.View):
@@ -109,7 +118,7 @@ class ResultEmbed(discord.Embed):
 
     # 팀 나누기
     random_members = members.copy()
-    discord.utils.shuffle(random_members)
+    shuffle(random_members)
     mid_index = len(random_members) // 2
     red_team = random_members[:mid_index]
     blue_team = random_members[mid_index:]
@@ -118,19 +127,18 @@ class ResultEmbed(discord.Embed):
     self.add_field(
       name="🔴 Red Team",
       value="\n".join(member.display_name for member in red_team),
-      inline=False,
+      inline=True,
     )
     self.add_field(
       name="🔵 Blue Team",
       value="\n".join(member.display_name for member in blue_team),
-      inline=False,
+      inline=True,
     )
 
 
 class ResultView(discord.ui.View):
   def __init__(self, members: List[discord.Member]) -> None:
     super().__init__(timeout=300)
-    self.add_item(ResultEmbed(members))
 
 
 async def setup(bot: commands.Bot) -> None:
