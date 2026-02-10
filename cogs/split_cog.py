@@ -101,7 +101,10 @@ class ConfirmButton(discord.ui.Button):
     red_team, blue_team = split_teams(view.selected_members)
     
     # 결과 메시지 전송
-    await interaction.followup.send(embed=ResultEmbed(red_team, blue_team), view=ResultView(interaction.client, red_team, blue_team))
+    await interaction.followup.send(
+      embed=ResultEmbed(red_team, blue_team),
+      view=ResultView(interaction.client, red_team, blue_team),
+    )
 
 
 class TargetMemberView(discord.ui.View):
@@ -155,13 +158,26 @@ class SetRoleButton(discord.ui.Button):
       (BLUE_ROLE_NAME, discord.Color.blue(), view.blue_team),
     ]
     
+    split_cog = interaction.client.get_cog("SplitCog")
+
+    if not isinstance(split_cog, SplitCog):
+      await interaction.response.send_message(
+        ephemeral=True,
+        content="❌ 역할 생성 기능을 찾지 못했습니다. 봇을 재시작해 주세요.",
+      )
+      return
+
     for role_name, color, members in teams_data:
-      role = await view.bot.get_or_create_role(guild, role_name, color)
+      role = await split_cog.get_or_create_role(guild, role_name, color)
       for member in members:
         await member.add_roles(role)
 
-    await interaction.response.send_message(
-      ephemeral=True,
+    # View의 모든 아이템 비활성화
+    for item in view.children:
+      item.disabled = True
+
+    await interaction.response.edit_message(view=view)
+    await interaction.followup.send(
       content="✅ 각 팀 역할이 부여되었습니다.",
     )
 
