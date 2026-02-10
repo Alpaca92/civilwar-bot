@@ -17,7 +17,7 @@ BLUE_VOICE_ID = int(os.getenv("BLUE_VOICE_ID"))
 
 class SplitCog(commands.Cog):
   def __init__(self, bot: commands.Bot) -> None:
-    self.bot = bot
+    pass
 
   async def get_or_create_role(
     self, guild: discord.Guild, name: str, color: discord.Color
@@ -103,7 +103,7 @@ class ConfirmButton(discord.ui.Button):
     # 결과 메시지 전송
     await interaction.followup.send(
       embed=ResultEmbed(red_team, blue_team),
-      view=ResultView(interaction.client, red_team, blue_team),
+      view=ResultView(red_team, blue_team),
     )
 
 
@@ -183,9 +183,8 @@ class SetRoleButton(discord.ui.Button):
 
 
 class ResultView(discord.ui.View):
-  def __init__(self, bot: commands.Bot, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
+  def __init__(self, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
     super().__init__(timeout=300)
-    self.bot = bot
     self.red_team = red_team
     self.blue_team = blue_team
     self.add_item(SetRoleButton())
