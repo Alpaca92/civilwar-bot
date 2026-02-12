@@ -8,10 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 특정 서버 ID 지정 (동기화 속도 향상)
-MY_GUILD = discord.Object(id=1461751770366869574)
-
-
 class Client(commands.Bot):
   # setup_hook: 봇이 시작될 때 가장 먼저 비동기로 실행됨
   async def setup_hook(self: Self) -> None:
@@ -26,11 +22,9 @@ class Client(commands.Bot):
         except Exception as error:
           print(f"❌ Failed to load {filename}: {error}")
 
-    # 특정 서버 전용 커맨드 동기화
-    # 팁: 개발 중에는 이 방식이 빠르고, 배포 때는 전역 동기화로 바꿉니다.
-    self.tree.copy_global_to(guild=MY_GUILD)
-    synced = await self.tree.sync(guild=MY_GUILD)
-    print(f"Synced {len(synced)} commands to guild {MY_GUILD.id}")
+    # 전역 커맨드 동기화
+    synced = await self.tree.sync()
+    print(f"Synced {len(synced)} commands globally")
 
   async def on_ready(self: Self) -> None:
     print(f"🚀 Logged in as {self.user} (ID: {self.user.id})")
