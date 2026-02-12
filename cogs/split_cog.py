@@ -28,7 +28,7 @@ class SplitCog(commands.Cog):
       role = await guild.create_role(name=name, color=color)
     return role
 
-  @check_user_count(2, ">=")  # fixme: 10명 이상으로 변경
+  @check_user_count(10, ">=")
   @app_commands.command(name="split", description="랜덤 팀 짜기")
   async def split(self, interaction: discord.Interaction) -> None:
     embed = discord.Embed(
