@@ -10,7 +10,6 @@ from utils.team_utils import split_teams
 
 RED_ROLE_NAME = "Red"
 BLUE_ROLE_NAME = "Blue"
-WAITING_VOICE_ID = int(os.getenv("WAITING_VOICE_ID"))
 RED_VOICE_ID = int(os.getenv("RED_VOICE_ID"))
 BLUE_VOICE_ID = int(os.getenv("BLUE_VOICE_ID"))
 
@@ -93,13 +92,13 @@ class ConfirmButton(discord.ui.Button):
     # View의 모든 아이템 비활성화
     for item in view.children:
       item.disabled = True
-    
+
     # 원본 메시지 편집하여 비활성화된 View 반영
     await interaction.response.edit_message(view=view)
-    
+
     # 팀 나누기
     red_team, blue_team = split_teams(view.selected_members)
-    
+
     # 결과 메시지 전송
     await interaction.followup.send(
       embed=ResultEmbed(red_team, blue_team),
@@ -117,7 +116,9 @@ class TargetMemberView(discord.ui.View):
 
 # [Step 2] 팀원 결과 및 Role 부여
 class ResultEmbed(discord.Embed):
-  def __init__(self, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
+  def __init__(
+    self, red_team: List[discord.Member], blue_team: List[discord.Member]
+  ) -> None:
     super().__init__(
       title="⚔️ 팀 구성 완료",
       color=discord.Color.green(),
@@ -134,6 +135,7 @@ class ResultEmbed(discord.Embed):
       value="\n".join(member.display_name for member in blue_team),
       inline=True,
     )
+
 
 class SetRoleButton(discord.ui.Button):
   def __init__(self) -> None:
@@ -157,7 +159,7 @@ class SetRoleButton(discord.ui.Button):
       (RED_ROLE_NAME, discord.Color.red(), view.red_team),
       (BLUE_ROLE_NAME, discord.Color.blue(), view.blue_team),
     ]
-    
+
     split_cog = interaction.client.get_cog("SplitCog")
 
     if not isinstance(split_cog, SplitCog):
@@ -183,7 +185,9 @@ class SetRoleButton(discord.ui.Button):
 
 
 class ResultView(discord.ui.View):
-  def __init__(self, red_team: List[discord.Member], blue_team: List[discord.Member]) -> None:
+  def __init__(
+    self, red_team: List[discord.Member], blue_team: List[discord.Member]
+  ) -> None:
     super().__init__(timeout=300)
     self.red_team = red_team
     self.blue_team = blue_team
