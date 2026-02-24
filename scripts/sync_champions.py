@@ -44,11 +44,15 @@ def upsert_champions(
   client = get_supabase_client()
   rows = [{column_name: name} for name in names]
 
-  inserted = 0
+  processed = 0
   for batch in batched(rows, batch_size):
-    client.table(table_name).upsert(batch, on_conflict=column_name).execute()
-    inserted += len(batch)
-  return inserted
+    client.table(table_name).upsert(
+      batch,
+      on_conflict=column_name,
+      ignore_duplicates=True,
+    ).execute()
+    processed += len(batch)
+  return processed
 
 
 def parse_args() -> argparse.Namespace:
@@ -90,13 +94,16 @@ def main() -> None:
       print(name)
     return
 
-  inserted_count = upsert_champions(
+  processed_count = upsert_champions(
     table_name=args.table,
     column_name=args.column,
     names=champion_names,
     batch_size=args.batch_size,
   )
-  print(f"Upserted {inserted_count} rows into {args.table}.{args.column}")
+  print(
+    f"Processed {processed_count} rows into {args.table}.{args.column} "
+    "(insert new, skip existing)"
+  )
 
 
 if __name__ == "__main__":
