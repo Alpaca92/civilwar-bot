@@ -1,7 +1,5 @@
 import argparse
 import json
-import sys
-from pathlib import Path
 from typing import Iterable
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -9,12 +7,6 @@ from urllib.request import urlopen
 from dotenv import load_dotenv
 
 from database import get_supabase_client
-
-ROOT_DIR = Path(__file__).resolve().parents[1]
-
-if str(ROOT_DIR) not in sys.path:
-  sys.path.insert(0, str(ROOT_DIR))
-
 
 VERSIONS_URL = "https://ddragon.leagueoflegends.com/api/versions.json"
 CHAMPION_URL = (
@@ -63,7 +55,7 @@ def parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser(
     description="Sync Riot champions into Supabase table"
   )
-  parser.add_argument("--table", default="compions", help="Target table name")
+  parser.add_argument("--table", default="champions", help="Target table name")
   parser.add_argument("--column", default="name", help="Target column name")
   parser.add_argument(
     "--locale", default="ko_KR", help="Riot locale, e.g. ko_KR or en_US"

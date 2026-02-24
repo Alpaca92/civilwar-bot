@@ -22,4 +22,4 @@ indent-width = 2
 
 [tool.poe.tasks]
 start  = "dotenvx run -- python main.py"
-sync-compions = "dotenvx run -- python scripts/sync_compions.py"
+sync-champions = "dotenvx run -- python -m scripts.sync_champions"
