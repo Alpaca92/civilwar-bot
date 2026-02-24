@@ -8,4 +8,4 @@ __pycache__/
 *.py[cod]
 
 # 환경 변수 (봇 토큰 같은 민감한 정보)
-.env
+.env.keys

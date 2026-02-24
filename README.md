@@ -1,1 +1,2 @@
 - [discordpy](https://discordpy.readthedocs.io/en/stable)
+- [dotenvx](https://www.npmjs.com/package/@dotenvx/dotenvx)
